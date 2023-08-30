@@ -1,0 +1,28 @@
+[package]
+name = "openvtt_app"
+version = "0.1.0"
+authors = []
+edition = "2021"
+description = ""
+homepage = ""
+repository = ""
+readme = "README.md"
+license = ""
+include = ["src", "assets", "LICENSE*", "README*"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = { version = "0.11.2", features = ["jpeg"] }
+bevy-inspector-egui = "0.19.0"
+bevy_asset_loader = "0.17.0"
+bevy_framepace = "0.13.3"
+bevy_matchbox = "0.7.0"
+bevy_pancam = "0.9.0"
+bincode = "1.3.3"
+serde = { version = "1.0.188", features = ["derive"] }
+
+# wasm only dependencies
+[target.wasm32-unknown-unknown.dependencies]
+tracing = "0.1.37"
+tracing-wasm = "0.2.1"
