@@ -1,0 +1,19 @@
+[package]
+name = "openvtt_server"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["dev"]
+dev = []
+
+[dependencies]
+axum = { version = "0.7.7", features = ["multipart"] }
+tokio = { version = "1.40.0", features = ["full"] }
+tokio-util = { version = "0.7.12", features = ["io"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tower-http = { version = "0.6.1", features = ["fs", "limit", "trace"] }
+futures = "0.3.31"
+rusqlite = { version = "0.32.0", features = ["bundled"] }
+listenfd = "1.0.1"

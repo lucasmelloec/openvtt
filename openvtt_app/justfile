@@ -1,0 +1,15 @@
+[no-cd]
+dev:
+  cargo watch -x "run -p openvtt_app --features dev"
+
+[no-cd]
+run:
+  cargo run -p openvtt_app --features dev
+
+[no-cd]
+wasm-run:
+  cargo run -p openvtt_app --no-default-features --features wasm-dev --target wasm32-unknown-unknown
+
+[no-cd]
+wasm-build:
+  cargo build -p openvtt_app --no-default-features --features wasm-dev --target wasm32-unknown-unknown

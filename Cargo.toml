@@ -1,0 +1,3 @@
+[workspace]
+members = ["openvtt_app", "openvtt_server"]
+resolver = "2"
