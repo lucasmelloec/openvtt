@@ -16,6 +16,9 @@ use tokio::{fs::File, io::BufWriter};
 use tokio_util::io::StreamReader;
 use tower_http::{limit::RequestBodyLimitLayer, services::ServeDir};
 
+mod database;
+mod models;
+mod schema;
 mod signaling;
 
 const DIST_DIRECTORY: &str = "dist";
@@ -24,6 +27,7 @@ const UPLOADS_DIRECTORY: &str = "assets/uploads";
 #[tokio::main]
 async fn main() {
     setup_logging();
+    database::Database::new().run_migrations();
     tokio::spawn(async {
         signaling::signaling_server().await.unwrap();
     });

@@ -1,3 +1,4 @@
 /target
 /static
 /dist
+database.sqlite3
