@@ -34,7 +34,8 @@ async fn main() {
     }
     let app = Router::new()
         .merge(routes::get_router())
-        .layer(tower_http::trace::TraceLayer::new_for_http());
+        .layer(tower_http::trace::TraceLayer::new_for_http())
+        .with_state(database_pool);
     let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 3000));
     tracing::debug!("listening on {}", addr);
     axum::Server::bind(&addr)

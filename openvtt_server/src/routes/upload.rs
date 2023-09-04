@@ -14,7 +14,7 @@ use tower_http::limit::RequestBodyLimitLayer;
 
 use super::{DIST_DIRECTORY, UPLOADS_DIRECTORY};
 
-pub fn get_router() -> Router {
+pub fn get_router() -> Router<crate::database::DatabasePool> {
     Router::new()
         .route("/", get(show_form).post(accept_form))
         .layer(DefaultBodyLimit::disable())
