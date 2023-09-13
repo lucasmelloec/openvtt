@@ -1,8 +1,11 @@
-use axum::{extract::State, http::StatusCode, response::Json, routing::post, Router};
+use axum::{extract::State, response::Json, routing::post, Router};
 use diesel::prelude::*;
 use serde::Deserialize;
 
-use crate::database::*;
+use crate::{
+    database::*,
+    errors::{auth::AuthError, AppError},
+};
 
 pub fn get_router() -> Router<DatabasePool> {
     Router::new()
@@ -19,11 +22,11 @@ struct AuthPayload {
 async fn login(
     State(database_pool): State<DatabasePool>,
     Json(payload): Json<AuthPayload>,
-) -> Result<Json<models::Player>, (StatusCode, String)> {
+) -> Result<Json<models::Player>, AppError> {
     use crate::database::schema::players::dsl::*;
 
     if payload.username.is_empty() || payload.password.is_empty() {
-        return Err((StatusCode::BAD_REQUEST, "Missing credentials".to_string()));
+        return Err(AuthError::MissingCredentials.into());
     }
     let player = database_pool
         .get_connection(|conn| {
@@ -35,10 +38,7 @@ async fn login(
         })
         .await;
     if !bcrypt::verify(&payload.password, &player.hashed_password).unwrap() {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "Wrong username or password".to_string(),
-        ));
+        return Err(AuthError::InvalidCredentials.into());
     }
 
     Ok(Json(player))
