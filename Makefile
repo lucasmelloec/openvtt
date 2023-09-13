@@ -22,6 +22,9 @@ build-app:
 	cp openvtt_server/www/index.html static/index.html
 	cp -r openvtt_app/assets static/assets
 
+watch:
+	systemfd --no-pid -s http::3000 -- cargo watch -x "run -p openvtt_server"
+
 all: build-app run-server
 
-.PHONY: all run build
+.PHONY: all run build watch
