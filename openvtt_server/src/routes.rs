@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::Router;
 
 mod auth;
@@ -8,7 +10,7 @@ mod upload;
 pub const DIST_DIRECTORY: &str = "dist";
 pub const UPLOADS_DIRECTORY: &str = "assets/uploads";
 
-pub fn get_router() -> Router<crate::database::DatabasePool> {
+pub fn get_router() -> Router<Arc<crate::database::DatabasePool>> {
     Router::new()
         .merge(root::get_router())
         .merge(auth::get_router())

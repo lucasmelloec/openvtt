@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{extract::State, response::Json, routing::post, Router};
 use diesel::prelude::*;
 use jsonwebtoken::{encode, EncodingKey, Header};
@@ -9,7 +11,7 @@ use crate::{
     errors::{auth::AuthError, AppError},
 };
 
-pub fn get_router() -> Router<DatabasePool> {
+pub fn get_router() -> Router<Arc<DatabasePool>> {
     Router::new()
         .route("/login", post(login))
         .route("/logout", post(logout))
@@ -28,7 +30,7 @@ struct Claims {
 }
 
 async fn login(
-    State(database_pool): State<DatabasePool>,
+    State(database_pool): State<Arc<DatabasePool>>,
     Json(payload): Json<AuthPayload>,
 ) -> Result<Json<Value>, AppError> {
     use crate::database::schema::players::dsl::*;

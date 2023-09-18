@@ -7,14 +7,14 @@ use axum::{
     BoxError, Router,
 };
 use futures::{Stream, TryStreamExt};
-use std::io;
+use std::{io, sync::Arc};
 use tokio::{fs::File, io::BufWriter};
 use tokio_util::io::StreamReader;
 use tower_http::limit::RequestBodyLimitLayer;
 
 use super::{DIST_DIRECTORY, UPLOADS_DIRECTORY};
 
-pub fn get_router() -> Router<crate::database::DatabasePool> {
+pub fn get_router() -> Router<Arc<crate::database::DatabasePool>> {
     Router::new()
         .route("/", get(show_form).post(accept_form))
         .layer(DefaultBodyLimit::disable())

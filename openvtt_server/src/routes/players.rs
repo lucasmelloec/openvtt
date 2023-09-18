@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     extract::State,
     http::StatusCode,
@@ -9,7 +11,7 @@ use serde::Deserialize;
 
 use crate::database::*;
 
-pub fn get_router() -> Router<DatabasePool> {
+pub fn get_router() -> Router<Arc<DatabasePool>> {
     Router::new()
         .route("/", post(create_player))
         .route("/", get(list_players))
@@ -28,7 +30,7 @@ impl PlayerPayload {
 }
 
 async fn create_player(
-    State(database_pool): State<DatabasePool>,
+    State(database_pool): State<Arc<DatabasePool>>,
     Json(payload): Json<PlayerPayload>,
 ) {
     database_pool
@@ -46,7 +48,7 @@ async fn create_player(
 }
 
 async fn list_players(
-    State(database_pool): State<DatabasePool>,
+    State(database_pool): State<Arc<DatabasePool>>,
 ) -> Result<Json<Vec<models::Player>>, (StatusCode, String)> {
     let players = database_pool
         .get_connection(|conn| {

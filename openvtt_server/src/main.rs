@@ -4,6 +4,7 @@ use std::{
     io,
     net::{Ipv4Addr, SocketAddr},
     path::Path,
+    sync::Arc,
 };
 use tokio::signal;
 
@@ -38,7 +39,7 @@ async fn main() {
     let app = Router::new()
         .merge(routes::get_router())
         .layer(tower_http::trace::TraceLayer::new_for_http())
-        .with_state(database_pool);
+        .with_state(Arc::new(database_pool));
     let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 3000));
     let mut listenfd = ListenFd::from_env();
     let server = match listenfd.take_tcp_listener(0).unwrap() {
