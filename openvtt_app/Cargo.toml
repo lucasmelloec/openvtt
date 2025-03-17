@@ -11,30 +11,54 @@ license = ""
 include = ["src", "assets", "LICENSE*", "README*"]
 
 [features]
+dev = [
+  "bevy/dynamic_linking",
+  "bevy/bevy_dev_tools",
+  "bevy/file_watcher",
+  "dep:bevy-inspector-egui",
+  "bevy/bevy_picking",
+  "bevy/bevy_pbr",
+]
 default = ["dev"]
-dev = ["bevy/dynamic_linking", "bevy/bevy_dev_tools", "bevy/file_watcher"]
-wasm-dev = ["bevy/bevy_dev_tools"]
+wasm-dev = [
+  "bevy/bevy_dev_tools",
+  "dep:bevy-inspector-egui",
+  "bevy/bevy_picking",
+  "bevy/bevy_pbr",
+]
 
 [dependencies]
-bevy = { version = "0.14.2", features = ["wayland"] }
-bevy_egui = "0.30.0"
-bevy-inspector-egui = "0.27.0"
-bevy_asset_loader = "0.21.0"
-bevy_framepace = "0.17.1"
-bevy_pancam = { version = "0.14.0", features = ["bevy_egui"] }
+bevy = { version = "0.16.1", default-features = false, features = [
+  "bevy_color",
+  "bevy_core_pipeline",
+  "bevy_log",
+  "bevy_state",
+  "bevy_text",
+  "bevy_ui",
+  "bevy_window",
+  "default_font",
+  "multi_threaded",
+  "webgl2",
+  "wayland",
+] }
+bevy-inspector-egui = { version = "0.32.0", optional = true }
+bevy_egui = "0.35.1"
+log = { version = "*", features = [
+  "max_level_debug",
+  "release_max_level_warn",
+] }
 
-# Enable a small amount of optimization in the dev profile.
 [profile.dev]
 opt-level = 1
 
-# Enable a large amount of optimization in the dev profile for dependencies.
 [profile.dev.package."*"]
 opt-level = 3
 
-# Optimize for size in the wasm-release profile to reduce load times and bandwidth usage on web.
+[profile.release]
+codegen-units = 1
+lto = "thin"
+
 [profile.wasm-release]
 inherits = "release"
-# Optimize with size in mind (also try "z", sometimes it is better).
 opt-level = "s"
-# Strip all debugging information from the binary to slightly reduce file size.
 strip = "debuginfo"

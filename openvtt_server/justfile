@@ -1,7 +1,0 @@
-[no-cd]
-dev:
-  systemfd --no-pid -s http::3000 -- cargo watch -x "run -p openvtt_server --features dev"
-
-[no-cd]
-run:
-  cargo run -p openvtt_server --features dev
