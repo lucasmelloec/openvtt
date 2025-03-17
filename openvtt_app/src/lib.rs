@@ -1,14 +1,12 @@
-use bevy::{input::common_conditions::input_toggle_active, prelude::*};
+use bevy::{input::common_conditions::input_toggle_active, prelude::*, window::PrimaryWindow};
 use bevy_asset_loader::prelude::*;
-use bevy_egui::{
-    egui::{self},
-    EguiContexts,
-};
+use bevy_egui::{egui, EguiContexts};
 use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_pancam::{PanCam, PanCamPlugin};
+use egui_blocking_plugin::{EguiBlockInputState, EguiBlockingPlugin};
 use resources::*;
 
+mod egui_blocking_plugin;
 mod resources;
 
 pub struct VttPlugin;
@@ -34,64 +32,31 @@ struct IpAddress(String);
 
 impl Plugin for VttPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(
-            WorldInspectorPlugin::default().run_if(input_toggle_active(false, KeyCode::Escape)),
-        )
-        .add_plugins(FramepacePlugin)
-        .add_plugins(PanCamPlugin)
-        .init_state::<AppState>()
-        .enable_state_scoped_entities::<AppState>()
-        .add_loading_state(
-            LoadingState::new(AppState::AssetLoading)
-                .continue_to_state(AppState::Connecting)
-                .load_collection::<ImageAssets>()
-                .load_collection::<FontAssets>(),
-        )
-        .add_systems(OnEnter(AppState::Connecting), setup_connecting)
-        .add_systems(Update, ui_system.run_if(in_state(AppState::Connecting)))
-        .add_systems(OnEnter(AppState::Connected), setup_connected)
-        .insert_resource(IpAddress(String::with_capacity(25)));
+        app.add_plugins(bevy_egui::EguiPlugin)
+            .add_plugins(EguiBlockingPlugin)
+            .add_plugins(
+                bevy_inspector_egui::quick::WorldInspectorPlugin::new()
+                    .run_if(input_toggle_active(false, KeyCode::Escape)),
+            )
+            .add_plugins(FramepacePlugin)
+            .add_plugins(PanCamPlugin)
+            .init_state::<AppState>()
+            .enable_state_scoped_entities::<AppState>()
+            .add_loading_state(
+                LoadingState::new(AppState::AssetLoading)
+                    .continue_to_state(AppState::Connecting)
+                    .load_collection::<ImageAssets>()
+                    .load_collection::<FontAssets>(),
+            )
+            .add_systems(OnEnter(AppState::Connecting), setup_connecting)
+            .add_systems(Update, ui_system.run_if(in_state(AppState::Connecting)))
+            .add_systems(OnEnter(AppState::Connected), setup_connected)
+            .add_systems(
+                Update,
+                camera_blocking.run_if(in_state(AppState::Connected)),
+            )
+            .insert_resource(IpAddress(String::with_capacity(25)));
     }
-}
-
-fn setup_connecting(
-    mut commands: Commands,
-    mut framepace: ResMut<FramepaceSettings>,
-    images: Res<ImageAssets>,
-    fonts: Res<FontAssets>,
-) {
-    framepace.limiter = Limiter::from_framerate(30.0);
-    commands.spawn((Camera2dBundle::default(), StateScoped(AppState::Connecting)));
-    commands
-        .spawn((
-            ImageBundle {
-                z_index: ZIndex::Local(-1),
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    //justify_content: JustifyContent::SpaceBetween,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                image: UiImage {
-                    texture: images.background.clone(),
-                    ..default()
-                },
-                ..default()
-            },
-            StateScoped(AppState::Connecting),
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "Enter the IP address with port",
-                TextStyle {
-                    font: fonts.default_font.clone(),
-                    color: Color::BLACK,
-                    ..default()
-                },
-            ));
-        });
 }
 
 fn ui_system(
@@ -115,15 +80,61 @@ fn ui_system(
         });
 }
 
+fn setup_connecting(
+    mut commands: Commands,
+    mut framepace: ResMut<FramepaceSettings>,
+    images: Res<ImageAssets>,
+    fonts: Res<FontAssets>,
+) {
+    framepace.limiter = Limiter::from_framerate(30.0);
+    commands.spawn((Camera2d, StateScoped(AppState::Connecting)));
+    commands
+        .spawn((
+            ImageNode {
+                image: images.background.clone(),
+                ..default()
+            },
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                //justify_content: JustifyContent::SpaceBetween,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ZIndex(-1),
+            StateScoped(AppState::Connecting),
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Text::new("Enter the IP address with port"),
+                TextFont {
+                    font: fonts.default_font.clone(),
+                    ..default()
+                },
+                TextColor(Color::BLACK),
+            ));
+        });
+}
+
 fn setup_connected(mut commands: Commands, images: Res<ImageAssets>) {
     commands
-        .spawn((Camera2dBundle::default(), StateScoped(AppState::Connected)))
+        .spawn((Camera2d, StateScoped(AppState::Connected)))
         .insert(PanCam::default());
     commands.spawn((
-        SpriteBundle {
-            texture: images.pig.clone(),
-            ..default()
-        },
+        Sprite::from_image(images.pig.clone()),
         StateScoped(AppState::Connected),
     ));
+}
+
+fn camera_blocking(
+    mut pancams: Query<&mut PanCam>,
+    egui_block_input_state: Res<EguiBlockInputState>,
+) {
+    for mut pancam in &mut pancams.iter_mut() {
+        pancam.enabled = true;
+        if egui_block_input_state.wants_pointer_input {
+            pancam.enabled = false;
+        }
+    }
 }
